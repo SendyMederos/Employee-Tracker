@@ -1,0 +1,17 @@
+{
+  "name": "10-greatbay",
+  "version": "1.0.0",
+  "description": "This is a inquirer - sql project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sendy Mederos",
+  "license": "MIT",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "dotenv": "^8.2.0",
+    "inquirer": "^7.3.3",
+    "mysql": "^2.18.1"
+  }
+}
