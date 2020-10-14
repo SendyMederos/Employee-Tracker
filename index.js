@@ -112,7 +112,6 @@ function viewAllEmp() {
   connection.query(query, function (err, res) {
     var table = cTable.getTable(res)
     console.log(table)
-    console.log("test")
     execute();
   });
 }
@@ -127,7 +126,6 @@ function viewAllEmpDep() {
   connection.query(query, function (err, res) {
     var table = cTable.getTable(res)
     console.log(table)
-    console.log("test")
     execute();
   });
 }
@@ -142,7 +140,6 @@ function viewAllEmpMg() {
   connection.query(query, function (err, res) {
     var table = cTable.getTable(res)
     console.log(table)
-    console.log("test")
     execute();
   });
 }
@@ -151,7 +148,6 @@ function viewDepartments() {
   connection.query(`SELECT * FROM departments`, function (err, res) {
     var table = cTable.getTable(res)
     console.log(table)
-    console.log("test")
     execute();
   });
 }
@@ -163,7 +159,6 @@ function viewRoles() {
   connection.query(query, function (err, res) {
     var table = cTable.getTable(res)
     console.log(table)
-    console.log("test")
     execute();
   });
 }
@@ -549,7 +544,14 @@ function viewBudget() {
           console.log(` The total budget expenditure for the ${answer.department} department is $${res.map(x => x.salary).reduce((a, b) => a + b)}`)
           }
         )
-        connection.query('SELECT role.title, role.salary, deartment.department')
+        connection.query(`SELECT employee.id, roles.title, roles.salary, departments.department FROM employee
+                          INNER JOIN roles ON employee.role_id = roles.id
+                          JOIN departments ON roles.department_id = departments.id
+                          WHERE roles.department_id =${depID}`, function(err, res) {
+                            var table = cTable.getTable(res)
+                            console.log(table)
+                            execute(); 
+                          })
       })
     })
   })
