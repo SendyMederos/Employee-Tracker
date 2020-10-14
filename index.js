@@ -35,7 +35,8 @@ function execute() {
         "Update Employee's Manager",
         "Remove Employee",
         "Remove Departments",
-        "Remove Roles"
+        "Remove Roles",
+        "View Department Utilized Budget"
       ]
     })
     .then(function (answer) {
@@ -79,7 +80,7 @@ function execute() {
         case "Remove Departments":
           removeDep();
           break;
-         
+
         case "Remove Roles":
           removeRoles();
           break;
@@ -90,6 +91,10 @@ function execute() {
 
         case "Update Employee's Manager":
           updateEmpMg();
+          break;
+
+        case "View Department Utilized Budget":
+          viewBudget();
           break;
       }
     });
@@ -449,18 +454,18 @@ function removeEmp() {
           return empArray.filter((val) => val !== null)
         }
       },
-    ).then(function(answer){
+    ).then(function (answer) {
       employeeToDelete = answer.emp.split(' ')
-      connection.query(`DELETE FROM employee WHERE first_name = "${employeeToDelete[0]}" AND last_name = "${employeeToDelete[1]}"`, function(err){
+      connection.query(`DELETE FROM employee WHERE first_name = "${employeeToDelete[0]}" AND last_name = "${employeeToDelete[1]}"`, function (err) {
         if (err) throw err
         execute()
       })
     })
   })
-} 
+}
 
 /// delete depatment 
-function removeDep(){
+function removeDep() {
   connection.query(`SELECT * FROM departments`, function (err, res) {
     if (err) throw err
     inquirer.prompt(
@@ -476,17 +481,17 @@ function removeDep(){
           return depArray
         }
       },
-    ).then(function(answer){
-      connection.query(`DELETE FROM departments WHERE department = "${answer.dep}"`, function(err){
+    ).then(function (answer) {
+      connection.query(`DELETE FROM departments WHERE department = "${answer.dep}"`, function (err) {
         if (err) throw err
         execute()
       })
     })
   })
-} 
+}
 
 /// delete roles 
-function removeRoles(){
+function removeRoles() {
   connection.query(`SELECT * FROM roles`, function (err, res) {
     if (err) throw err
     inquirer.prompt(
@@ -502,11 +507,50 @@ function removeRoles(){
           return roleArray
         }
       },
-    ).then(function(answer){
-      connection.query(`DELETE FROM roles WHERE title = "${answer.role}"`, function(err){
+    ).then(function (answer) {
+      connection.query(`DELETE FROM roles WHERE title = "${answer.role}"`, function (err) {
         if (err) throw err
         execute()
       })
     })
   })
-} 
+}
+//// view total budeget of a department
+function viewBudget() {
+  connection.query("SELECT * FROM departments", function (err, res) {
+    if (err) throw err;
+    inquirer.prompt(
+      {
+        name: "department",
+        type: "list",
+        message: "Select a department for the new role",
+        choices: function () {
+          var depArray = [];
+          for (let i = 0; i < res.length; i++) {
+            depArray.push(res[i].department)
+          }
+          return depArray
+        }
+      }
+    ).then(function (answer) {
+      var depID;
+      var promise = new Promise(function (resolve, reject) {
+        connection.query("SELECT id FROM departments WHERE department = ?", [answer.department], function (err, res) {
+          if (err) console.log(err)
+          depID = res[0].id
+          resolve()
+        })
+      })
+      promise.then(function () {
+        connection.query(`SELECT  salary FROM (employee 
+          INNER JOIN roles ON employee.role_id = roles.id
+          INNER JOIN departments ON roles.department_id = departments.id)
+          WHERE roles.department_id = "${depID}" `, function (err, res) {
+          console.log(` The total budget expenditure for the ${answer.department} department is $${res.map(x => x.salary).reduce((a, b) => a + b)}`)
+          }
+        )
+        connection.query('SELECT role.title, role.salary, deartment.department')
+      })
+    })
+  })
+}
