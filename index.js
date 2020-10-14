@@ -33,7 +33,9 @@ function execute() {
         "Add Employee",
         "Update Employee's Role",
         "Update Employee's Manager",
-        "Remove Employee"
+        "Remove Employee",
+        "Remove Departments",
+        "Remove Roles"
       ]
     })
     .then(function (answer) {
@@ -51,11 +53,11 @@ function execute() {
           break;
 
         case "View Departments":
-          viewDepartments() 
+          viewDepartments()
           break;
-        
+
         case "View Roles":
-          viewRoles() 
+          viewRoles()
           break;
 
         case "Add Department":
@@ -72,6 +74,14 @@ function execute() {
 
         case "Remove Employee":
           removeEmp();
+          break;
+
+        case "Remove Departments":
+          removeDep();
+          break;
+         
+        case "Remove Roles":
+          removeRoles();
           break;
 
         case "Update Employee's Role":
@@ -132,27 +142,26 @@ function viewAllEmpMg() {
   });
 }
 //// view Departments
- function viewDepartments() {
+function viewDepartments() {
   connection.query(`SELECT * FROM departments`, function (err, res) {
-      var table = cTable.getTable(res)
-      console.log(table)
-      console.log("test")
-      execute();
+    var table = cTable.getTable(res)
+    console.log(table)
+    console.log("test")
+    execute();
   });
- }
+}
 //// view Roles 
 function viewRoles() {
   let query = `SELECT roles.id, roles.title, roles.salary, departments.department 
               FROM roles
               INNER JOIN departments ON roles.department_id = departments.id`
   connection.query(query, function (err, res) {
-      var table = cTable.getTable(res)
-      console.log(table)
-      console.log("test")
-      execute();
+    var table = cTable.getTable(res)
+    console.log(table)
+    console.log("test")
+    execute();
   });
- }
-
+}
 
 
 //// add department
@@ -299,8 +308,6 @@ function addEmp() {
         })
       })
     });
-
-
 }
 
 
@@ -425,3 +432,81 @@ function updateEmpMg() {
   })
 }
 
+/// delete empoyee
+function removeEmp() {
+  connection.query(`SELECT employee.first_name, employee.last_name FROM employee`, function (err, res) {
+    if (err) throw err
+    inquirer.prompt(
+      {
+        name: "emp",
+        type: "list",
+        message: "Who are you deleting?",
+        choices: function () {
+          var empArray = [];
+          for (let i = 0; i < res.length; i++) {
+            empArray.push(res[i].first_name + ' ' + res[i].last_name)
+          }
+          return empArray.filter((val) => val !== null)
+        }
+      },
+    ).then(function(answer){
+      employeeToDelete = answer.emp.split(' ')
+      connection.query(`DELETE FROM employee WHERE first_name = "${employeeToDelete[0]}" AND last_name = "${employeeToDelete[1]}"`, function(err){
+        if (err) throw err
+        execute()
+      })
+    })
+  })
+} 
+
+/// delete depatment 
+function removeDep(){
+  connection.query(`SELECT * FROM departments`, function (err, res) {
+    if (err) throw err
+    inquirer.prompt(
+      {
+        name: "dep",
+        type: "list",
+        message: "What department are you deleting?",
+        choices: function () {
+          var depArray = [];
+          for (let i = 0; i < res.length; i++) {
+            depArray.push(res[i].department)
+          }
+          return depArray
+        }
+      },
+    ).then(function(answer){
+      connection.query(`DELETE FROM departments WHERE department = "${answer.dep}"`, function(err){
+        if (err) throw err
+        execute()
+      })
+    })
+  })
+} 
+
+/// delete roles 
+function removeRoles(){
+  connection.query(`SELECT * FROM roles`, function (err, res) {
+    if (err) throw err
+    inquirer.prompt(
+      {
+        name: "role",
+        type: "list",
+        message: "What role are you deleting?",
+        choices: function () {
+          var roleArray = [];
+          for (let i = 0; i < res.length; i++) {
+            roleArray.push(res[i].title)
+          }
+          return roleArray
+        }
+      },
+    ).then(function(answer){
+      connection.query(`DELETE FROM roles WHERE title = "${answer.role}"`, function(err){
+        if (err) throw err
+        execute()
+      })
+    })
+  })
+} 
