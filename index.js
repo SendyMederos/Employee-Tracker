@@ -26,11 +26,13 @@ function execute() {
         "View all Employees",
         "View all Employees by Department",
         "View all Employees by Manager",
+        "View Departments",
+        "View Roles",
         "Add Department",
         "Add Role",
         "Add Employee",
-        "Update Employee Role",
-        "Update Employee Manager",
+        "Update Employee's Role",
+        "Update Employee's Manager",
         "Remove Employee"
       ]
     })
@@ -46,6 +48,14 @@ function execute() {
 
         case "View all Employees by Manager":
           viewAllEmpMg();
+          break;
+
+        case "View Departments":
+          viewDepartments() 
+          break;
+        
+        case "View Roles":
+          viewRoles() 
           break;
 
         case "Add Department":
@@ -64,11 +74,11 @@ function execute() {
           removeEmp();
           break;
 
-        case "Update Employee Role":
+        case "Update Employee's Role":
           updateEmpRole();
           break;
 
-        case "Update Employee Manager":
+        case "Update Employee's Manager":
           updateEmpMg();
           break;
       }
@@ -121,6 +131,30 @@ function viewAllEmpMg() {
     execute();
   });
 }
+//// view Departments
+ function viewDepartments() {
+  connection.query(`SELECT * FROM departments`, function (err, res) {
+      var table = cTable.getTable(res)
+      console.log(table)
+      console.log("test")
+      execute();
+  });
+ }
+//// view Roles 
+function viewRoles() {
+  let query = `SELECT roles.id, roles.title, roles.salary, departments.department 
+              FROM roles
+              INNER JOIN departments ON roles.department_id = departments.id`
+  connection.query(query, function (err, res) {
+      var table = cTable.getTable(res)
+      console.log(table)
+      console.log("test")
+      execute();
+  });
+ }
+
+
+
 //// add department
 function addDepartment() {
   inquirer.prompt([
@@ -285,7 +319,7 @@ function updateEmpRole() {
         choices: function () {
           var empArray = [];
           for (let i = 0; i < res.length; i++) {
-            empArray.push(res[i].first_name+ ' ' + res[i].last_name)
+            empArray.push(res[i].first_name + ' ' + res[i].last_name)
           }
           return empArray.filter((val) => val !== null)
         }
@@ -343,7 +377,7 @@ function updateEmpMg() {
         choices: function () {
           var empArray = [];
           for (let i = 0; i < res.length; i++) {
-            empArray.push(res[i].first_name+ ' ' + res[i].last_name)
+            empArray.push(res[i].first_name + ' ' + res[i].last_name)
           }
           return empArray
         }
@@ -355,7 +389,7 @@ function updateEmpMg() {
         choices: function () {
           var managerArray = [];
           for (let i = 0; i < res.length; i++) {
-            managerArray.push(res[i].first_name+ ' ' + res[i].last_name)
+            managerArray.push(res[i].first_name + ' ' + res[i].last_name)
           }
           return managerArray
         }
