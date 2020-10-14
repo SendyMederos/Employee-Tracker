@@ -2,7 +2,7 @@ const mysql = require("mysql");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
 
-
+/// establishing connection
 var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
@@ -15,7 +15,7 @@ connection.connect(function (err) {
   if (err) throw err;
   execute();
 });
-
+//function that will prompt the main menu 
 function execute() {
   inquirer
     .prompt({
@@ -38,7 +38,7 @@ function execute() {
         "Remove Roles",
         "View Department Utilized Budget"
       ]
-    })
+    }) /// this switch case will execute the right function
     .then(function (answer) {
       switch (answer.menu) {
         case "View all Employees":
@@ -100,7 +100,7 @@ function execute() {
     });
 }
 
-////View all Employees
+////View all Employees it will join all three tables based on the ids identifiers 
 
 function viewAllEmp() {
   let query = `SELECT CONCAT_WS(' ', a.first_name, a.last_name) as employees, roles.title, roles.salary, departments.department, b.last_name as manager
@@ -108,14 +108,13 @@ function viewAllEmp() {
     LEFT JOIN employee b ON a.manager_id = b.id
     INNER JOIN roles ON a.role_id = roles.id)
     INNER JOIN departments ON roles.department_id = departments.id)`
-
   connection.query(query, function (err, res) {
     var table = cTable.getTable(res)
     console.log(table)
     execute();
   });
 }
-////View all Employees by Department
+////View all Employees by Department will order the table by department
 function viewAllEmpDep() {
   let query = `SELECT departments.department, CONCAT_WS(' ', a.first_name, a.last_name) as employees, roles.title, roles.salary, b.last_name as manager
     FROM ((employee a
@@ -129,7 +128,7 @@ function viewAllEmpDep() {
     execute();
   });
 }
-///View all Employees by Manager
+///View all Employees by Manager will display the whole manager name starting by the last name
 function viewAllEmpMg() {
   let query = `SELECT CONCAT_WS(' ', a.first_name, a.last_name) as employees, roles.title, departments.department, CONCAT_WS(', ', b.last_name, b.first_name) as manager
     FROM ((employee a
@@ -143,7 +142,7 @@ function viewAllEmpMg() {
     execute();
   });
 }
-//// view Departments
+//// view Departments 
 function viewDepartments() {
   connection.query(`SELECT * FROM departments`, function (err, res) {
     var table = cTable.getTable(res)
@@ -196,7 +195,8 @@ function addRole() {
         name: "salary",
         type: "input",
         message: "Enter the new Role's Salaray: "
-      },
+      }, 
+      /// you can choose the department 
       {
         name: "department",
         type: "list",
@@ -212,6 +212,7 @@ function addRole() {
 
     ]).then(function (answer) {
       var depID;
+      ///created a promise to make sure the code doesnt execute before it gets the id for the department selected
       var promise = new Promise(function (resolve, reject) {
         connection.query("SELECT id FROM departments WHERE department = ?", [answer.department], function (err, res) {
           if (err) console.log(err)
@@ -219,6 +220,7 @@ function addRole() {
           resolve()
         })
       })
+      //// execute promise and insert into the table
       promise.then(function () {
         connection.query("INSERT INTO roles SET ? ",
           {
@@ -237,7 +239,6 @@ function addRole() {
 }
 /// Add Employee
 function addEmp() {
-
   connection.query(`SELECT * FROM (employee 
                 INNER JOIN roles ON employee.role_id = roles.id
                 INNER JOIN departments ON roles.department_id = departments.id)`,
@@ -263,6 +264,7 @@ function addEmp() {
             for (let i = 0; i < res.length; i++) {
               roleArray.push(res[i].title)
             }
+            /// because there is multiple employees with the same role, we are returning an array without duplicates
             return [...new Set(roleArray)];
           }
         },
@@ -281,6 +283,7 @@ function addEmp() {
       ]).then(function (answer) {
         var empID;
         var roleID
+        /////created a promise to make sure the code doesnt execute before it gets the id for the role and the manager selected
         var promise = new Promise(function (resolve, reject) {
           connection.query("SELECT id FROM roles WHERE title = ?", [answer.role], function (err, res) {
             if (err) console.log(err)
@@ -328,7 +331,7 @@ function updateEmpRole() {
           for (let i = 0; i < res.length; i++) {
             empArray.push(res[i].first_name + ' ' + res[i].last_name)
           }
-          return empArray.filter((val) => val !== null)
+          return empArray
         }
       },
       {
@@ -340,6 +343,7 @@ function updateEmpRole() {
           for (let i = 0; i < res.length; i++) {
             roleArray.push(res[i].title)
           }
+          //returing an array without duplicates
           return [...new Set(roleArray)]
         }
       }
@@ -405,6 +409,8 @@ function updateEmpMg() {
       var managerID
       var employeeToUpdate = answer.emp.substring(0, answer.emp.indexOf(' '))
       var promise = new Promise(function (resolve, reject) {
+        /// the employee manager Id will be the manager id on the employee table
+        /// i am selecting the first name to make that conection
         connection.query("SELECT id FROM employee WHERE first_name = ?", [answer.manager.substring(0, answer.manager.indexOf(' '))], function (err, res) {
           if (err) console.log(err)
           managerID = res[0].id
@@ -459,7 +465,7 @@ function removeEmp() {
   })
 }
 
-/// delete depatment 
+/// delete department 
 function removeDep() {
   connection.query(`SELECT * FROM departments`, function (err, res) {
     if (err) throw err
@@ -541,9 +547,11 @@ function viewBudget() {
           INNER JOIN roles ON employee.role_id = roles.id
           INNER JOIN departments ON roles.department_id = departments.id)
           WHERE roles.department_id = "${depID}" `, function (err, res) {
+            //// console log a reduced salary for all the emplloyees that belong to the department in question
           console.log(` The total budget expenditure for the ${answer.department} department is $${res.map(x => x.salary).reduce((a, b) => a + b)}`)
           }
         )
+        /// I wanted to return a table that displays the roles for the department in question
         connection.query(`SELECT employee.id, roles.title, roles.salary, departments.department FROM employee
                           INNER JOIN roles ON employee.role_id = roles.id
                           JOIN departments ON roles.department_id = departments.id
